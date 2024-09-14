@@ -17,7 +17,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
-
+from langchain_community.vectorstores import Chroma
 # Optionally, keep `genai` if you're using Google's API directly
 import google.generativeai as genai
 
@@ -56,18 +56,23 @@ def generate_chunks(text):
 # Convert Chunks into Vectors
 
 
+
+
+# Modify the chunks_to_vectors function to use in-memory storage (without SQLite)
 def chunks_to_vectors(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
     # Create Chroma in-memory vector store (no SQLite)
     vector_store = Chroma(collection_name="document_embeddings", 
                           embedding_function=embeddings, 
-                          persist_directory=None)  # In-memory usage
+                          persist_directory=None)  # Set persist_directory to None for in-memory
     
     # Add the chunks to the vector store
-    vector_store.add_texts([chunk])
+    for chunk in chunks:
+        vector_store.add_texts([chunk])
 
     return vector_store
+
 
 
 def get_conversation():
