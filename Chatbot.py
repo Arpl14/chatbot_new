@@ -20,7 +20,8 @@ from langchain.prompts import PromptTemplate
 from langchain_community.vectorstores import Chroma
 # Optionally, keep `genai` if you're using Google's API directly
 import google.generativeai as genai
-
+from chromadb.config import Settings
+from langchain_community.vectorstores import Chroma
 
 # In[35]:
 
@@ -58,20 +59,29 @@ def generate_chunks(text):
 
 
 
+
 # Modify the chunks_to_vectors function to use in-memory storage (without SQLite)
 def chunks_to_vectors(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
-    # Create Chroma in-memory vector store (no SQLite)
-    vector_store = Chroma(collection_name="document_embeddings", 
-                          embedding_function=embeddings, 
-                          persist_directory=None)  # Set persist_directory to None for in-memory
+    # Create Chroma in-memory vector store (no SQLite) using custom settings
+    settings = Settings(
+        persist_directory=None,  # Ensures Chroma uses in-memory mode
+        chroma_db_impl="duckdb+parquet",  # Use DuckDB instead of SQLite
+        anonymized_telemetry=False  # Disable any telemetry
+    )
+    
+    vector_store = Chroma(
+        collection_name="document_embeddings", 
+        embedding_function=embeddings,
+        client_settings=settings  # Pass the custom settings here
+    )
     
     # Add the chunks to the vector store
-    for chunk in chunks:
-        vector_store.add_texts([chunk])
-
+    vector_store.add_texts(chunks)
+    
     return vector_store
+
 
 
 
