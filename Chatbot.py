@@ -3,39 +3,23 @@
 
 # In[19]:
 
-
 import os
 import streamlit as st
 from PyPDF2 import PdfReader
 from dotenv import load_dotenv
 
-from langchain.embeddings import OpenAIEmbeddings
+# Keep only one embeddings import, either OpenAIEmbeddings or GoogleGenerativeAIEmbeddings based on what you're using.
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma  # For in-memory vector store
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
+
+# Google Generative AI embeddings and chat models
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
-from langchain.vectorstores import Memory
 
-# In[20]:
-
-
-import os
-import streamlit as st
+# Optionally, keep `genai` if you're using Google's API directly
 import google.generativeai as genai
-
-
-from langchain_community.vectorstores import Chroma
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.chains import RetrievalQAWithSourcesChain
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.chains.question_answering import load_qa_chain
-from langchain.prompts import PromptTemplate
-from PyPDF2 import PdfReader
-from dotenv import load_dotenv
 
 
 # In[35]:
@@ -78,13 +62,12 @@ def chunks_to_vectors(chunks):
     # Create Chroma in-memory vector store (no SQLite)
     vector_store = Chroma(collection_name="document_embeddings", 
                           embedding_function=embeddings, 
-                          persist_directory=None)  # Set persist_directory to None for in-memory
+                          persist_directory=None)  # In-memory usage
     
     # Add the chunks to the vector store
     vector_store.add_texts([chunk])
 
     return vector_store
-
 
 
 def get_conversation():
