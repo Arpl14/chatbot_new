@@ -24,6 +24,8 @@ import os
 import streamlit as st
 import google.generativeai as genai
 
+
+from langchain_community.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -73,11 +75,13 @@ def generate_chunks(text):
 def chunks_to_vectors(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
-    # Use Memory vector store (no SQLite or persistence)
-    vector_store = Memory(embedding_function=embeddings)
+    # Create Chroma in-memory vector store (no SQLite)
+    vector_store = Chroma(collection_name="document_embeddings", 
+                          embedding_function=embeddings, 
+                          persist_directory=None)  # Set persist_directory to None for in-memory
     
     # Add the chunks to the vector store
-    vector_store.add_texts(chunks)
+    vector_store.add_texts([chunk])
 
     return vector_store
 
