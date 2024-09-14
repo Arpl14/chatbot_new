@@ -22,7 +22,7 @@ from langchain_community.vectorstores import Chroma
 import google.generativeai as genai
 from chromadb.config import Settings
 from langchain_community.vectorstores import Chroma
-
+import tempfile
 
 # In[35]:
 
@@ -63,26 +63,27 @@ def generate_chunks(text):
 # Modify the chunks_to_vectors function to avoid SQLite
 def chunks_to_vectors(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    
-    # Force Chroma to use DuckDB instead of SQLite, and avoid persistence on disk
-    settings = Settings(
-        chroma_db_impl="duckdb+parquet",  # Use DuckDB with Parquet, bypassing SQLite
-        persist_directory=None,  # No persistence, completely in-memory
-        anonymized_telemetry=False  # Disable telemetry
-    )
-    
-    # Initialize the Chroma vector store
-    vector_store = Chroma(
-        collection_name="document_embeddings", 
-        embedding_function=embeddings,
-        client_settings=settings  # Pass the DuckDB settings
-    )
-    
-    # Add the chunks to the vector store
-    vector_store.add_texts(chunks)
-    
-    return vector_store
 
+    # Create a temporary directory for Chroma to use as persistence (avoids SQLite)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        settings = Settings(
+            chroma_db_impl="duckdb+parquet",  # Use DuckDB with Parquet, bypassing SQLite
+            persist_directory=temp_dir,  # Use the temporary directory
+            anonymized_telemetry=False  # Disable telemetry
+        )
+        
+        # Initialize the Chroma vector store
+        vector_store = Chroma(
+            collection_name="document_embeddings", 
+            embedding_function=embeddings,
+            client_settings=settings  # Pass the DuckDB settings
+        )
+        
+        # Add the chunks to the vector store
+        vector_store.add_texts(chunks)
+
+    return vector_store
+  
 def get_conversation():
     prompt_template = """
     Answer the question that is asked with as much detail as you can, given the context that has been provided. If you unable to come up with an answer based on the provided context,
