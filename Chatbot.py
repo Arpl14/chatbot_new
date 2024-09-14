@@ -15,7 +15,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
-
+from langchain.vectorstores import Memory
 
 # In[20]:
 
@@ -68,16 +68,19 @@ def generate_chunks(text):
   return chunks 
 
 # Convert Chunks into Vectors
+
+
 def chunks_to_vectors(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    try:
-        vector_store = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
-        vector_store.save_local("faiss_index")  # Save the updated index
-    except Exception as e:
-        print("Error in loading FAISS index:", e)
-        raise
-  # vector_store = FAISS.from_texts(chunks, embeddings)
-   #vector_store.save_local("faiss_index")
+    
+    # Use Memory vector store (no SQLite or persistence)
+    vector_store = Memory(embedding_function=embeddings)
+    
+    # Add the chunks to the vector store
+    vector_store.add_texts(chunks)
+
+    return vector_store
+
 
 
 def get_conversation():
