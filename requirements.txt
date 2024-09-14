@@ -6,9 +6,8 @@ langchain==0.2.2
 langchain-community==0.2.3
 langchain-google-genai==1.0.10
 
-# Chroma for vector storage, explicitly using DuckDB instead of SQLite
+# Chroma for vector storage
 chromadb==0.5.0
-duckdb==0.7.1  # DuckDB dependency to replace SQLite
 
 # OpenAI and Google APIs for embeddings
 openai==1.31.1
