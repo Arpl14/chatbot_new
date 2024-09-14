@@ -58,32 +58,29 @@ def generate_chunks(text):
 # Convert Chunks into Vectors
 
 
-# Modify the chunks_to_vectors function to use in-memory storage
 
-# Modify the chunks_to_vectors function to avoid SQLite
-# Modify the chunks_to_vectors function to use DuckDB instead of SQLite
+# Use duckdb+parquet and avoid persistence altogether
 def chunks_to_vectors(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-
-    # Create a temporary directory for Chroma to use as persistence (avoids SQLite)
-    with tempfile.TemporaryDirectory() as temp_dir:
-        settings = Settings(
-            chroma_db_impl="duckdb+parquet",  # Ensure DuckDB with Parquet is used instead of SQLite
-            persist_directory=temp_dir,  # Use the temporary directory
-            anonymized_telemetry=False  # Disable telemetry
-        )
-        
-        # Initialize the Chroma vector store
-        vector_store = Chroma(
-            collection_name="document_embeddings", 
-            embedding_function=embeddings,
-            client_settings=settings  # Pass the DuckDB settings
-        )
-        
-        # Add the chunks to the vector store
-        vector_store.add_texts(chunks)
+    
+    # Create Chroma vector store without any persistence (in-memory)
+    settings = Settings(
+        chroma_db_impl="duckdb+parquet",  # Use DuckDB with Parquet instead of SQLite
+        anonymized_telemetry=False  # Disable telemetry
+    )
+    
+    # Initialize Chroma vector store
+    vector_store = Chroma(
+        collection_name="document_embeddings", 
+        embedding_function=embeddings,
+        client_settings=settings  # Pass the DuckDB settings
+    )
+    
+    # Add the chunks to the vector store
+    vector_store.add_texts(chunks)
 
     return vector_store
+
   
 def get_conversation():
     prompt_template = """
