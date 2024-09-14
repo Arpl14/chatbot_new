@@ -60,24 +60,25 @@ def generate_chunks(text):
 
 
 # Use duckdb+parquet and avoid persistence altogether
+
+  from chromadb.config import Settings
+from chromadb.utils import duckdb
+
 def chunks_to_vectors(chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
-    # Create Chroma vector store without any persistence (in-memory)
-    settings = Settings(
-        chroma_db_impl="duckdb+parquet",  # Use DuckDB with Parquet instead of SQLite
-        anonymized_telemetry=False  # Disable telemetry
-    )
-    
-    # Initialize Chroma vector store
+    # Create Chroma in-memory vector store using DuckDB (instead of SQLite)
     vector_store = Chroma(
-        collection_name="document_embeddings", 
+        collection_name="document_embeddings",
         embedding_function=embeddings,
-        client_settings=settings  # Pass the DuckDB settings
+        client_settings=Settings(
+            chroma_db_impl="duckdb",  # Use DuckDB instead of SQLite
+            persist_directory="chroma_index"  # Optional, for persistence
+        )
     )
     
     # Add the chunks to the vector store
-    vector_store.add_texts(chunks)
+    vector_store.add_texts([chunk for chunk in chunks])
 
     return vector_store
 
